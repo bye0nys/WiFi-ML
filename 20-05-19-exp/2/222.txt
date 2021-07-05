@@ -1,0 +1,79 @@
+clear all; clc
+ploting= importdata('plot3.csv');
+% 1번
+% a = 1; % 1번부터 18번까지
+% if ((a==1) ||(a ==2) || (a==3)|| (a==4)|| (a==5)|| (a==6)|| (a==7)|| (a==8)|| (a==9))
+%     X1= ploting(2*a-1, :); Y1= ploting(2*a, :);X8= ploting(2*a+41, :); Y8= ploting(2*a+42, :); X15= ploting(2*a+83, :); Y15= ploting(2*a+84, :); X22 = ploting(2*a+125, :); Y22 = ploting(2*a+126, :);
+% else
+%     X1= ploting(2*a-1, :); Y1= ploting(2*a, :);X8= ploting(2*a+29, :); Y8= ploting(2*a+30, :); X15= ploting(2*a+59, :); Y15= ploting(2*a+60, :); X22 = ploting(2*a+89, :); Y22 = ploting(2*a+90, :);
+% end
+X1 = ploting(1, :);
+Y1 = ploting(2, :);
+Point_No = 10;
+for i = 1 : 1 : 18
+    R1(i) = sqrt((ploting(1, i+1) - ploting(1, i)).^2 + (ploting(2, i+1) - ploting(2, i)).^2);
+end
+R_sum = sum(R1);
+% R1 = sqrt((X8 - X1).^2  + (Y8 - Y1).^2); R2 = sqrt((X15 - X8).^2  + (Y15 - Y8).^2); R3 = sqrt((X22 - X15).^2  + (Y22 - Y15).^2); R1_mean = mean(R1); R2_mean = mean(R2); R3_mean = mean(R3); R_sum = R1_mean + R2_mean + R3_mean;
+Step_Length = R_sum / (Point_No - 1);    % 2.37
+
+% 2번 Origin Point 
+for i = 1 : 1 : 19
+plot(X1(i), Y1(i), '.'); hold on;
+end
+% plot(X8, Y8, '.b'); hold on; plot(X15, Y15, '.m'); hold on; plot(X22, Y22, '.g'); hold on; 
+
+% if ((a==1) ||(a ==2) || (a==3))
+    Origin_PointX = [1 2.5 4 5.5]; Origin_PointY = [1 2.5 4 5.5]; plot(Origin_PointX, Origin_PointY, 'b'); hold on; p1 = plot(Origin_PointX, Origin_PointY, '.r', 'MarkerSize', 25); hold on;
+% elseif ((a==4) ||(a ==5) || (a==6))
+%     Origin_PointX = [1 2.5 4 5.5]; Origin_PointY = [2.5 4 5.5 7]; plot(Origin_PointX, Origin_PointY, 'b'); hold on; p1 = plot(Origin_PointX, Origin_PointY, '.r', 'MarkerSize', 25); hold on;
+% elseif ((a==7) ||(a ==8) || (a==9))
+%     Origin_PointX = [1 2.5 4 5.5]; Origin_PointY = [4 5.5 7 8.5]; plot(Origin_PointX, Origin_PointY, 'b'); hold on; p1 = plot(Origin_PointX, Origin_PointY, '.r', 'MarkerSize', 25); hold on;
+% elseif ((a==10) ||(a ==11) || (a==12))
+%     Origin_PointX = [1 2.5 4 5.5]; Origin_PointY = [5.5 4 2.5 1]; plot(Origin_PointX, Origin_PointY, 'b'); hold on; p1 = plot(Origin_PointX, Origin_PointY, '.r', 'MarkerSize', 25); hold on;    
+% elseif ((a==13) ||(a ==14) || (a==15))
+%     Origin_PointX = [1 2.5 4 5.5]; Origin_PointY = [7 5.5 4 2.5]; plot(Origin_PointX, Origin_PointY, 'b'); hold on; p1 = plot(Origin_PointX, Origin_PointY, '.r', 'MarkerSize', 25); hold on;
+% else
+%     Origin_PointX = [1 2.5 4 5.5]; Origin_PointY = [8.5 7 5.5 4]; plot(Origin_PointX, Origin_PointY, 'b'); hold on; p1 = plot(Origin_PointX, Origin_PointY, '.r', 'MarkerSize', 25); hold on;   
+% end
+   
+x = X1;
+y = Y1;
+
+mdl = fitlm(x,y);
+mdl_X = table2array(mdl.Coefficients(2, 1)); mdl_Y = table2array(mdl.Coefficients(1, 1));
+seta = atand(mdl_X); cosine = Step_Length * cosd(seta); sine = Step_Length * sind(seta);
+figure(1);
+% plot(mdl);
+reference_x = 0:1:10;
+reference_y = mdl_X * reference_x + mdl_Y;
+plot(reference_x,reference_y, 'r');
+hold on;
+% 4번
+X_axis = 0 : 0.1 : 2;
+Y_axis = mdl_X * X_axis + mdl_Y; repeat = length(X_axis); Distance = zeros(1, repeat); 
+Cosine = ones(1, repeat); Sine = ones(1, repeat); Cosine = Cosine .* cosine; Sine = Sine .* sine;
+for i = 1 : 1 : Point_No
+    Cosine_R(i) = Cosine(i) .* (i-1);
+    Sine_R(i) = Sine(i) .* (i-1);
+end
+PointX = X_axis' + Cosine_R; PointY = Y_axis' + Sine_R;
+for i= 1 : 1 : repeat
+    Distance(i) = mean(sqrt((X1-PointX(i,1)).^2+(Y1-PointY(i,1)).^2) + sqrt((X8-PointX(i,2)).^2+(Y8-PointY(i,2)).^2) + sqrt((X15-PointX(i,3)).^2+(Y15-PointY(i,3)).^2) + sqrt((X22-PointX(i,4)).^2+(Y22-PointY(i,4)).^2));
+end
+Distance_min = min(Distance); Distance_min_Point = find(Distance == Distance_min);
+Optimal_X = PointX(Distance_min_Point, :); Optimal_Y = PointY(Distance_min_Point, :);
+for i = 1 : 1 : Point_No
+    Distance_Op_Ox_Vector(i) = sqrt((Origin_PointX(i) - Optimal_X(i)).^2 + (Origin_PointY(i) - Optimal_Y(i)).^2);
+end
+Distance_Op_Ox = mean(Distance_Op_Ox_Vector)
+Distance_Rp_Ox = mean((sqrt((X1-Origin_PointX(1)).^2+(Y1-Origin_PointY(1)).^2) + sqrt((X8-Origin_PointX(2)).^2+(Y8-PointY(2)).^2) + sqrt((X15-Origin_PointX(3)).^2+(Y15-Origin_PointY(3)).^2) + sqrt((X22-Origin_PointX(4)).^2+(Y22-Origin_PointY(4)).^2)) /4)
+p2 = plot(Optimal_X, Optimal_Y, 'p', 'MarkerEdgeColor', 'k', 'MarkerSize', 15);
+% Legend 수정코드 !
+lgd = legend([p1 p2], {'Origin Point', 'Estimated Point'}, 'Location','northeast', 'FontSize', 14, 'FontWeight', 'bold');
+lgd = legend('boxoff');
+xlim([0 8]);
+ylim([1 10]);
+hold on;
+
+clearvars -except Distance_Op_Ox Distance_Rp_Ox Step_Length Distance_min Distance_min_Point Distance Optimal_X Optimal_Y;
